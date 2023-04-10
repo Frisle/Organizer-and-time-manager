@@ -54,8 +54,11 @@ def main():
     elif "Return" in user_input:
         read_json_tasks(data_tasks_time, time_now)
         back_to_task = input("Input task: ")
-        write_create.update_task_json("current_task", back_to_task, json_data_list_file)
-        write_create.time_control(back_to_task)
+        if len(back_to_task) > 0:
+            write_create.update_task_json("current_task", back_to_task, json_data_list_file)
+            write_create.time_control(back_to_task)
+        else:
+            print("Input valid symbols")
         main()
     elif "Read time" in user_input:
         write_create.read_time(data_tasks_time)
@@ -74,5 +77,5 @@ def main():
     else:
         main()
     main()
-# --file-version=0.0.1.10 --product-name=Time manager --enable-console --mingw64 --standalone --onefile --windows-icon-from-ico=coding.ico --output-dir="C:\Users\wda61\PycharmProjects\Builds\Organizer" --remove-output
+# --file-version=0.0.2.11 --product-name=Time manager --enable-console --mingw64 --standalone --onefile --windows-icon-from-ico=coding.ico --output-dir="C:\Users\wda61\PycharmProjects\Builds\Organizer" --remove-output
 main()

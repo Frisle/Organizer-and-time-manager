@@ -5,16 +5,12 @@ import os
 from datetime import datetime
 
 
-
-
-
 time_kz = datetime.now()
 time_now = time_kz.strftime("%m/%d/%Y")
 
 
-
-json_data_file = " assets/notes_json.json"
-json_data_list_file = "assets/data.json"
+json_data_file = "notes_json.json"
+json_data_list_file = "data.json"
 write_create.check_create_data_base()
 
 def main():
@@ -79,6 +75,9 @@ def main():
             take_notes()
         elif "-cls" in user_prompt:
             os.system("cls")
+            take_notes()
+        elif "timer" in user_prompt:
+            os.system("python /addons/test.py")
             take_notes()
         elif "-test" in user_prompt:
             position = str(input("Date and index "))

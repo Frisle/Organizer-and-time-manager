@@ -5,12 +5,14 @@ import win32api
 from datetime import timedelta
 from datetime import datetime
 import pprint
+import keyboard
+import os
 
 
 
-json_data_file = "assets/notes_json.json"
-json_data_list_file = "assets/data.json"
-data_tasks_time = "assets/data_tasks_time.json"
+json_data_file = r"notes_json.json"
+json_data_list_file = r"data.json"
+data_tasks_time = r"data_tasks_time.json"
 
 time_kz = datetime.now()
 time_now = time_kz.strftime("%m/%d/%Y")
@@ -78,7 +80,7 @@ def check_create_data_base():
 
 
 def create_null_data_tasks_json():
-    with open(data_tasks_time, "w") as json_file:
+    with open(data_tasks_time, "w", encoding="utf-8") as json_file:
         data = {
             time_now: []
                 }
@@ -87,7 +89,7 @@ def create_null_data_tasks_json():
 
 
 def create_null_list_json():
-    with open(json_data_list_file, "w") as json_file:
+    with open(json_data_list_file, "w", encoding="utf-8") as json_file:
         data = {
             "tags": [],
             "current_task": ["Heer your current tasks will appear"]
@@ -414,14 +416,17 @@ def time_control(new_task):
     print(f"Begin working on {new_task}")
     start = time.time()
     # test.main()
-    user_input_stop = input("Input Stop to take a break: ").capitalize()
-    if "Stop" in user_input_stop:
-        stop = time.time()
-        elapsed_time = stop - start  # time in seconds
-        task_index = read_json_tasks_index(time_now, new_task, data_tasks_time)
-        append_json_tasks(time_now, task_index, new_task, elapsed_time, data_tasks_time)
-        time_spend = timedelta(seconds=elapsed_time)
-        print(f"Time spend on task {new_task} {time_spend}")
+    # user_input_stop = input("Input Stop to take a break: ").capitalize()
+    # if len(user_input_stop) > 0 or len(user_input_stop) < 0:
+    print("Press Shift+Return to stop")
+    keyboard.wait("shift+return")
+    stop = time.time()
+    elapsed_time = stop - start  # time in seconds
+    task_index = read_json_tasks_index(time_now, new_task, data_tasks_time)
+    append_json_tasks(time_now, task_index, new_task, elapsed_time, data_tasks_time)
+    time_spend = timedelta(seconds=elapsed_time)
+    print(f"Time spend on task {new_task} {time_spend}")
+
 
 
 # show available dates open data_tasks_time.json and read all keys with seconds
