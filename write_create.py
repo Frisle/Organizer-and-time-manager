@@ -120,10 +120,11 @@ def read_json_date(file_name, elem):
         file_data = json.load(json_file)
         for day in file_data:
             full_day = datetime.strptime(day, '%m/%d/%Y')
+            day_slash = full_day.strftime('%m/%d/%Y')
             day_name = full_day.strftime('%a %d')
             month_name = full_day.strftime('%b')
             year = full_day.strftime('\'%y')
-            print(f"{day_name} {month_name} {year} {len(file_data[day])} {elem}")
+            print(f"{day_name} {month_name} {year} {len(file_data[day])} {elem} {day_slash}")
 
 
 # read and display today keys
@@ -313,6 +314,13 @@ def read_json_by_time_and_request(file_name, number):
 
 # return index of dict with task in time_now list (time_control)
 def read_json_tasks_index(position, task, file_name): # <'index'>
+    """
+
+    :param position: takes time_now
+    :param task: takes name of the task as a sting
+    :param file_name: current file name of the json
+    :return: numeric index of a task or False if not
+    """
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
         tasks = []
@@ -321,8 +329,8 @@ def read_json_tasks_index(position, task, file_name): # <'index'>
             for data in data_pull:
                 tasks.append(list(data))
             return tasks.index([task])
-        except KeyError:
-            pass
+        except ValueError:
+            return False
 
 # search by key word in values
 def read_json_to_search(file_name, search_entry):
@@ -415,17 +423,17 @@ def time_control(new_task):
 
     print(f"Begin working on {new_task}")
     start = time.time()
-    # test.main()
-    # user_input_stop = input("Input Stop to take a break: ").capitalize()
-    # if len(user_input_stop) > 0 or len(user_input_stop) < 0:
+
     print("Press Shift+Return to stop")
     keyboard.wait("shift+return")
     stop = time.time()
     elapsed_time = stop - start  # time in seconds
+
     task_index = read_json_tasks_index(time_now, new_task, data_tasks_time)
     append_json_tasks(time_now, task_index, new_task, elapsed_time, data_tasks_time)
     time_spend = timedelta(seconds=elapsed_time)
-    print(f"Time spend on task {new_task} {time_spend}")
+    print("\nWork stopped. Get some rest or start another one")
+    print(f"Time spend on task {new_task} {time_spend}\n")
 
 
 
