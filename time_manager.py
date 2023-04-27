@@ -5,6 +5,8 @@ import json
 import write_create
 import time
 
+
+
 data_tasks_time = "data_tasks_time.json"
 json_data_list_file = "data.json"
 
@@ -21,22 +23,27 @@ def read_json(position, file_name):
         return data_pull[0]
 
 
-def read_json_tasks(file_name, time_now):
+def read_json_tasks(file_name, task_time):
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
-        for tasks in file_data[time_now]:
-            print(list(tasks.keys()))
+        count = 0
+        list_tasks = []
+        for tasks in file_data[task_time][1:]:
+            count += 1
+            list_tasks.append(list(tasks.keys()))
+            print(f"{count-1} {list(tasks.keys())}")
+        return list_tasks
 
 
 def main():
 
-    idle_time_start = time.time() # start idle time measure
+    idle_time_start = time.time()  # start idle time measure
 
     current_task = read_json("current_task", json_data_list_file)
     print(f"Current task: {current_task}")
-
+    # temp_test_1.TaskbarWindow("text") # add support for external tasks displaying.
     user_input = input("What to do: ").capitalize()
-    idle_time_stop = time.time() # stop idle time measure
+    idle_time_stop = time.time()  # stop idle time measure
     idle_result = idle_time_stop - idle_time_start
     time_spend = timedelta(seconds=idle_result)
     """
@@ -65,9 +72,8 @@ def main():
         main()
     elif "Current" in user_input:
         current_task = read_json("current_task", json_data_list_file)
-        print(current_task)
-        check_task_apearence = write_create.read_json_tasks_index(time_now, current_task, data_tasks_time)
-        if check_task_apearence is not False:
+        check_task_appearance = write_create.read_json_tasks_index(time_now, current_task, data_tasks_time)
+        if check_task_appearance is not False:
             write_create.time_control(current_task)
         else:
             print("Seems line this task is not in the list, but i will write it for you")
@@ -75,14 +81,16 @@ def main():
             write_create.time_control(current_task)
         main()
     elif "Return" in user_input:
-        read_json_tasks(data_tasks_time, time_now)
-        back_to_task = input("Input task: ")
-        if len(back_to_task) > 0:
-            write_create.update_task_json("current_task", back_to_task, json_data_list_file)
-            write_create.time_control(back_to_task)
-        else:
+        list_of_tasks = read_json_tasks(data_tasks_time, time_now)
+        try:
+            back_to_task = int(input("Input task: "))
+            tasks = " ".join(list_of_tasks[back_to_task])
+            write_create.update_task_json("current_task", tasks, json_data_list_file)
+            write_create.time_control(tasks)
+            main()
+        except ValueError:
             print("Input valid symbols")
-        main()
+            main()
     elif "Read time" in user_input:
         write_create.read_time(data_tasks_time)
         main()
@@ -102,6 +110,6 @@ def main():
     main()
 
 
-#test_cases  --file-version=0.0.2.15 --product-name=Time_manager --enable-console --mingw64 --standalone --onefile --windows-icon-from-ico=coding.ico --output-dir="C:\Users\wda61\PycharmProjects\Builds\Organizer" --remove-output
-# --file-version=0.0.2.15 --product-name=Time_manager --enable-console --mingw64 --standalone --onefile --windows-icon-from-ico=coding.ico --output-dir="C:\Distributed_apps" --remove-output
+# test_cases  --file-version=0.0.4.16 --product-name=Time_manager --enable-console --mingw64 --standalone --onefile --windows-icon-from-ico=coding.ico --output-dir="C:\Users\wda61\PycharmProjects\Builds\Organizer" --remove-output
+# --file-version=0.0.4.16 --product-name=Time_manager --enable-console --mingw64 --standalone --onefile --windows-icon-from-ico=coding.ico --output-dir="C:\Distributed_apps" --remove-output
 main()

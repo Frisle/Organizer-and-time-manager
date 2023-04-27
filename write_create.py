@@ -8,11 +8,9 @@ import pprint
 import keyboard
 import os
 
-
-
-json_data_file = r"notes_json.json"
-json_data_list_file = r"data.json"
-data_tasks_time = r"data_tasks_time.json"
+json_data_file = os.path.join(os.getcwd(), r"notes_json.json")
+json_data_list_file = os.path.join(os.getcwd(), r"data.json")
+data_tasks_time = os.path.join(os.getcwd(), r"data_tasks_time.json")
 
 time_kz = datetime.now()
 time_now = time_kz.strftime("%m/%d/%Y")
@@ -20,11 +18,10 @@ time_now = time_kz.strftime("%m/%d/%Y")
 
 # Read all properties of the given file return them as a dictionary.
 def get_file_properties(f_name):
-
     prop_names = ('Comments', 'InternalName', 'ProductName',
-        'CompanyName', 'LegalCopyright', 'ProductVersion',
-        'FileDescription', 'LegalTrademarks', 'PrivateBuild',
-        'FileVersion', 'OriginalFilename', 'SpecialBuild')
+                  'CompanyName', 'LegalCopyright', 'ProductVersion',
+                  'FileDescription', 'LegalTrademarks', 'PrivateBuild',
+                  'FileVersion', 'OriginalFilename', 'SpecialBuild')
 
     props = {'FixedFileInfo': None, 'StringFileInfo': None, 'FileVersion': None}
 
@@ -32,8 +29,8 @@ def get_file_properties(f_name):
     fixed_info = win32api.GetFileVersionInfo(f_name, '\\')
     props['FixedFileInfo'] = fixed_info
     props['FileVersion'] = "%d.%d.%d.%d" % (fixed_info['FileVersionMS'] / 65536,
-    fixed_info['FileVersionMS'] % 65536, fixed_info['FileVersionLS'] / 65536,
-    fixed_info['FileVersionLS'] % 65536)
+                                            fixed_info['FileVersionMS'] % 65536, fixed_info['FileVersionLS'] / 65536,
+                                            fixed_info['FileVersionLS'] % 65536)
 
     # \VarFileInfo\Translation returns list of available (language, codepage)
     # pairs that can be used to retreive string info. We are using only the first pair.
@@ -45,7 +42,7 @@ def get_file_properties(f_name):
     str_info = {}
     for propName in prop_names:
         strInfoPath = u'\\StringFileInfo\\%04X%04X\\%s' % (lang, codepage, propName)
-        ## print str_info
+        # print str_info
         str_info[propName] = win32api.GetFileVersionInfo(f_name, strInfoPath)
 
     props['StringFileInfo'] = str_info
@@ -53,13 +50,13 @@ def get_file_properties(f_name):
     version = str_info["ProductVersion"]
     return version
 
+
 """
-------------Create data json files----------------
+------------Create data base files----------------
 """
 
 
 def check_create_data_base():
-
     try:
         with open(json_data_file, "r") as file_data:
             file_data.readlines()
@@ -83,7 +80,7 @@ def create_null_data_tasks_json():
     with open(data_tasks_time, "w", encoding="utf-8") as json_file:
         data = {
             time_now: []
-                }
+        }
         json_object = json.dumps(data, indent=4)
         json_file.write(json_object)
 
@@ -93,7 +90,7 @@ def create_null_list_json():
         data = {
             "tags": [],
             "current_task": ["Heer your current tasks will appear"]
-                }
+        }
         json_object = json.dumps(data, indent=4)
         json_file.write(json_object)
 
@@ -108,9 +105,8 @@ def create_null_json():
         json_file.write(json_object)
 
 
-
 """
-------------Create data json files----------------
+------------Create data base files----------------
 """
 
 
@@ -127,6 +123,13 @@ def read_json_date(file_name, elem):
             print(f"{day_name} {month_name} {year} {len(file_data[day])} {elem} {day_slash}")
 
 
+def read_json_display_tags(position, file_name):
+    with open(file_name, "r") as json_file:
+        file_data = json.load(json_file)
+        data_pull = file_data[position]
+        return data_pull
+
+
 # read and display today keys
 def read_json_keys_today(file_name):
     with open(file_name, "r") as json_file:
@@ -134,19 +137,21 @@ def read_json_keys_today(file_name):
         for today in file_data[time_now]:
             print(list(today.keys()))
 
+
 # used by -date function
-def read_json(position, file_name):
+def read_json_date_func(position, file_name):
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
         try:
             data_pull = file_data[position]
             for data in data_pull:
                 print(data)
-                return data
+            return data
         except KeyError:
             print("There is no notes that day")
 
 
+# open json_tasks_time and return spend time and task titles
 def read_json_tasks_time(file_name, position):
     with open(file_name, "r") as json_file:
         tasks_time = []
@@ -158,7 +163,6 @@ def read_json_tasks_time(file_name, position):
                 tasks_time.append(items.get(key))
                 tasks_name.append(key)
         return tasks_time, tasks_name
-
 
 
 # write "data_json.json"
@@ -181,6 +185,7 @@ def append_json(position, data, file_name):
 
     with open(file_name, "w") as json_file:
         json.dump(file_data, json_file, ensure_ascii=False, indent=4)
+
 
 # clear list by position and append new data
 def update_task_json(position, data, file_name):
@@ -219,7 +224,6 @@ def read_and_write_tag_json_list(new_tag, position, file_name):
 
 # find the note and replace it with edited one (-test)
 def update_json(replace_data, file_name, user_input):
-
     position = user_input[:10]
     index = int(user_input[11:13])
 
@@ -241,7 +245,7 @@ def update_json(replace_data, file_name, user_input):
         if item != "'":
             processed_key += item
 
-    value = replace_data[colon+1:].strip("}")
+    value = replace_data[colon + 1:].strip("}")
     processed_value = ""
     for item in value:
         if item != "'":
@@ -263,6 +267,7 @@ def pretty_print(data_pull):
                 print(pretty_item)
             else:
                 print(note)
+
 
 # read today
 def read_json_by_time_for_disp_time(file_name):
@@ -313,11 +318,11 @@ def read_json_by_time_and_request(file_name, number):
 
 
 # return index of dict with task in time_now list (time_control)
-def read_json_tasks_index(position, task, file_name): # <'index'>
+def read_json_tasks_index(position, task, file_name):  # <'index'>
     """
 
     :param position: takes time_now
-    :param task: takes name of the task as a sting
+    :param task: takes name of the task as a string
     :param file_name: current file name of the json
     :return: numeric index of a task or False if not
     """
@@ -331,6 +336,7 @@ def read_json_tasks_index(position, task, file_name): # <'index'>
             return tasks.index([task])
         except ValueError:
             return False
+
 
 # search by key word in values
 def read_json_to_search(file_name, search_entry):
@@ -351,7 +357,8 @@ def read_json_to_search_by_tag(file_name, search_entry):
             for tasks in file_data[date]:
                 for item in tasks.keys():
                     if search_entry.lower() in item.lower():
-                        notes = pprint.pformat(tasks, indent=1, width=80, depth=2, compact=False, sort_dicts=True, underscore_numbers=False)
+                        notes = pprint.pformat(tasks, indent=1, width=80, depth=2, compact=False, sort_dicts=True,
+                                               underscore_numbers=False)
                         # print(date, str(tasks))
                         print(notes)
 
@@ -369,8 +376,8 @@ def editing_user_input(user_input):
     if slash_index > 0:
         tag = user_input[:slash_index + 1]
         tag = tag[:-1]
-        read_and_write_tag_json_list(tag,"tags", json_data_list_file)
-        user_input = user_input[slash_index+1:]
+        read_and_write_tag_json_list(tag, "tags", json_data_list_file)
+        user_input = user_input[slash_index + 2:]  # +2 eliminates space before note
     else:
         tag = "other"
 
@@ -404,6 +411,7 @@ def update_json_file(time_now, file_name):
     with open(file_name, "w") as json_file:
         json.dump(file_data, json_file, ensure_ascii=False, indent=4)
 
+
 # write next day date
 def check_current_date(file_name):
     with open(file_name, "r") as json_file:
@@ -414,18 +422,18 @@ def check_current_date(file_name):
         except KeyError:
             update_json_file(time_now, file_name)
 
+
 """
 ------Time manager control block-----------------
 """
 
 
 def time_control(new_task):
-
-    print(f"Begin working on {new_task}")
+    print(f"Begin working on {new_task}\n")
     start = time.time()
 
-    print("Press Shift+Return to stop")
-    keyboard.wait("shift+return")
+    print("Input any key to stop the timer")
+    stop_timer = input("Input: ")
     stop = time.time()
     elapsed_time = stop - start  # time in seconds
 
@@ -434,7 +442,6 @@ def time_control(new_task):
     time_spend = timedelta(seconds=elapsed_time)
     print("\nWork stopped. Get some rest or start another one")
     print(f"Time spend on task {new_task} {time_spend}\n")
-
 
 
 # show available dates open data_tasks_time.json and read all keys with seconds
@@ -446,11 +453,22 @@ def read_time(file_name):
     data = read_json_tasks_time(data_tasks_time, input_task)  # <class 'list'>
     tasks_time = data[0]
     tasks_name = data[1]
-    time_float = 0
-    for item in tasks_time:
+    total_time_float = 0
+    idle_time_float = 0
+    for item in tasks_time[1:]:
         for seconds in item:
-            time_float += seconds
-    total_time = timedelta(seconds=time_float)
+            total_time_float += seconds
+
+    for idle_time in tasks_time[0:1]:
+        for idle_seconds in idle_time:
+            idle_time_float += idle_seconds
+
+    total_idle_time = timedelta(seconds=idle_time_float)
+    total_time_task = timedelta(seconds=total_time_float)
+
+    total_time_seconds = idle_time_float + total_time_float
+    total_time = timedelta(seconds=total_time_seconds)
+
     elapsed_time = []
     for t in tasks_time:
         elapsed_time.append(timedelta(seconds=sum(t)))
@@ -459,7 +477,9 @@ def read_time(file_name):
         tasks_names = tasks_name[i]
         elapsed_times = elapsed_time[i]
         print(f"Time spent on {tasks_names} is {elapsed_times}\n")
-    print(f"Time total {total_time}")
+    print(f"Time total spent on tasks {total_time_task}")
+    print(f"Time total spent idle {total_idle_time}")
+    print(f"Time overall {total_time}")
 
 
 """
