@@ -1,12 +1,13 @@
 # for quick and easy work organisation
+import csv
 import json
 import time
 import win32api
 from datetime import timedelta
 from datetime import datetime
-import pprint
-import keyboard
 import os
+from shutil import copyfile
+import test_case
 
 json_data_file = os.path.join(os.getcwd(), r"notes_json.json")
 json_data_list_file = os.path.join(os.getcwd(), r"data.json")
@@ -41,9 +42,9 @@ def get_file_properties(f_name):
 
     str_info = {}
     for propName in prop_names:
-        strInfoPath = u'\\StringFileInfo\\%04X%04X\\%s' % (lang, codepage, propName)
+        str_info_path = u'\\StringFileInfo\\%04X%04X\\%s' % (lang, codepage, propName)
         # print str_info
-        str_info[propName] = win32api.GetFileVersionInfo(f_name, strInfoPath)
+        str_info[propName] = win32api.GetFileVersionInfo(f_name, str_info_path)
 
     props['StringFileInfo'] = str_info
 
@@ -54,6 +55,16 @@ def get_file_properties(f_name):
 """
 ------------Create data base files----------------
 """
+
+
+def create_directories():
+    parent_dir = os.getcwd()
+    dir_1 = "connected"
+    path_1 = os.path.join(parent_dir, dir_1)
+    try:
+        os.mkdir(path_1)
+    except FileExistsError:
+        pass
 
 
 def check_create_data_base():
@@ -75,6 +86,11 @@ def check_create_data_base():
     except FileNotFoundError:
         create_null_list_json()
 
+    try:
+        os.listdir("connected_test/")
+    except FileNotFoundError:
+        create_directories()
+
 
 def create_null_data_tasks_json():
     with open(data_tasks_time, "w", encoding="utf-8") as json_file:
@@ -89,7 +105,8 @@ def create_null_list_json():
     with open(json_data_list_file, "w", encoding="utf-8") as json_file:
         data = {
             "tags": [],
-            "current_task": ["Heer your current tasks will appear"]
+            "current_task": ["Heer your current tasks will appear"],
+            "artifacts": []
         }
         json_object = json.dumps(data, indent=4)
         json_file.write(json_object)
@@ -134,8 +151,13 @@ def read_json_display_tags(position, file_name):
 def read_json_keys_today(file_name):
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
-        for today in file_data[time_now]:
-            print(list(today.keys()))
+        if len(file_data[time_now]) > 0:
+            for today in file_data[time_now]:
+                print(list(today.keys()))
+            return True
+        elif len(file_data[time_now]) <= 0:
+            print("There is no notes yet")
+            return False
 
 
 # used by -date function
@@ -148,7 +170,8 @@ def read_json_date_func(position, file_name):
                 print(data)
             return data
         except KeyError:
-            print("There is no notes that day")
+            print("There is no notes that day or date is incorrect")
+            return False
 
 
 # open json_tasks_time and return spend time and task titles
@@ -176,12 +199,15 @@ def read_json_tasks_time(file_name, position):
 #         json.dump(file_data, json_file)
 
 
-# append new note to the time_now in data_list.json
-def append_json(position, data, file_name):
+# append a new artefact to the position key in data_list.json
+# contain test option remove, for future use
+def append_json(position, data, file_name, remove = False):
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
-
-    file_data[position].append(data)
+    if not remove:
+        file_data[position].append(data)
+    else:
+        file_data[position].remove(data)
 
     with open(file_name, "w") as json_file:
         json.dump(file_data, json_file, ensure_ascii=False, indent=4)
@@ -227,13 +253,11 @@ def update_json(replace_data, file_name, user_input):
     position = user_input[:10]
     index = int(user_input[11:13])
 
-    print(position)
-    print(index)
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
 
     file_data[position].pop(index)
-    print(file_data[position][index])
+
     with open(file_name, "w") as json_file:
         json.dump(file_data, json_file, ensure_ascii=False, indent=4)
 
@@ -245,7 +269,7 @@ def update_json(replace_data, file_name, user_input):
         if item != "'":
             processed_key += item
 
-    value = replace_data[colon + 1:].strip("}")
+    value = replace_data[colon+1:].strip("}")
     processed_value = ""
     for item in value:
         if item != "'":
@@ -301,9 +325,16 @@ def read_json_by_time_for_return_order(file_name):
 
 # display all
 def read_json_by_time_for_disp_all(file_name):
+    no = "There is no notes"
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
-        pprint.pprint(file_data, width=100)
+        for notes in file_data:
+            print(notes)
+            if len(file_data[notes]) > 0:
+                for item in file_data[notes]:
+                    print(item)
+            else:
+                print(no)
 
 
 # read by certain position
@@ -340,13 +371,20 @@ def read_json_tasks_index(position, task, file_name):  # <'index'>
 
 # search by key word in values
 def read_json_to_search(file_name, search_entry):
+    count = 0
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
         for date in file_data:
             for tasks in file_data[date]:
                 for item in tasks.values():
-                    if search_entry.lower() in item:
-                        print(date, tasks)
+                    if search_entry.lower() in item.lower():
+                        count += 1
+                        # # notes = pprint.pformat(tasks, indent=1, width=80, depth=2, compact=False, sort_dicts=True,
+                        #                        underscore_numbers=False)
+                        # print(date, tasks)
+                        print(tasks)
+
+        print(f"Found {count} match")
 
 
 # search by key word in keys (by -tag)
@@ -357,10 +395,129 @@ def read_json_to_search_by_tag(file_name, search_entry):
             for tasks in file_data[date]:
                 for item in tasks.keys():
                     if search_entry.lower() in item.lower():
-                        notes = pprint.pformat(tasks, indent=1, width=80, depth=2, compact=False, sort_dicts=True,
-                                               underscore_numbers=False)
-                        # print(date, str(tasks))
-                        print(notes)
+                        # notes = pprint.pformat(tasks, indent=1, width=80, depth=2, compact=False, sort_dicts=True,
+                        #                        underscore_numbers=False)
+                        print(date, str(tasks))
+                        # print(notes)
+
+
+"""
+   start: block with working with files 
+"""
+
+
+#  function to view available artifacts
+def read_file_list(position, file_name):
+    with open(file_name, "r") as json_file:
+        key_list = []
+        file_data = json.load(json_file)
+        if len(file_data[position]) == 0:
+            return False
+        data_pull = file_data[position]
+        for item in data_pull:
+            for delim in list(item.keys()):
+                key_list.append(delim.split("%"))
+                print(delim.replace("%", " || "), " || ", *list(item.values()))
+        return key_list
+
+
+# function form record with artifact data and write in data.json
+def update_artifact_list(position, file_name, name, extension, size, key, description):
+
+    with open(file_name, "r") as json_file:
+        file_data = json.load(json_file)
+        data_pull = file_data[position]
+        order = len(data_pull)
+
+        # order+1==next to last number, extension==file extension from os.path.splitext(file_name), size==size in bytes
+        data = {f"{order+1}%{extension}%{name}%{size}kb%{key}": f"{description}"}
+
+    file_data[position].append(data)
+
+    with open(file_name, "w") as json_file:
+        json.dump(file_data, json_file, ensure_ascii=False, indent=4)
+
+
+def importing_new_file(path):
+    file_name = os.path.basename(path)  # extract only name.ext of file from path string
+    name, extension = os.path.splitext(file_name)  # separate file name and extension
+    size = os.path.getsize(path) / 1024  # get file size in bytes
+    description = input("Input short description: ")
+    content_category = input("Input ")
+    size_in_bt = '{0:.2f}'.format(size)
+    update_artifact_list("artifacts", json_data_list_file, name, extension, size_in_bt, content_category, description)
+    parent_dir = os.getcwd()
+    target_dir = os.path.join(parent_dir, "connected/"+str(file_name))
+
+    copyfile(path, target_dir)
+
+
+# function used to get list of files from a directory: "connected/"
+# and open notepad to edit it.
+def write_db(file_name):
+    list_of_file = os.listdir("connected/")
+    index = list_of_file.index(file_name)
+    file_name = list_of_file[index]
+    full_path = os.path.abspath("connected/"+str(file_name))
+    os.startfile(full_path)
+
+
+# function used to get list of files from a directory: "connected/"
+# and print its content in the cmd.
+def connected_db(file_name):
+    list_of_file = os.listdir("connected/")
+    index = list_of_file.index(file_name)
+    connected_file = list_of_file[index]
+    full_path = os.path.abspath("connected/" + str(connected_file))
+    file = open("connected/" + str(connected_file), "r")
+    try:
+        content = file.read()
+        print(content)
+    except UnicodeDecodeError:
+        os.startfile(full_path)
+
+    file.close()
+
+
+# test case of csv writer
+def csv_writer():
+    header = ["platform", "console", "command", "description"]
+
+    data = ["linux", 1, "-ls", "Open a new single-pane window for the default selection. "
+                               "This is usually the root of the drive Windows is installed on. "
+                               "If the window is already open a duplicate opens"]
+
+    with open('connected/code_snippets.csv', "w", encoding="UTF-8", newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(header)
+        writer.writerow(data)
+
+
+# test case of csv reader
+def csv_reader():
+    with open("connected/code_snippets.csv", encoding="utf-8") as file:
+        reader = csv.reader(file)
+        for line in reader:
+            if line[1] == str(0):
+                print(line)
+
+
+# commented out due to lack of pandas import
+# building package with pandas is costly and long,
+# so it decided to stop work on it for now
+# def pandas_reader():
+#
+#     # pd.set_option("max_columns", 2)  # Showing only two columns
+#     pd.set_option('display.max_columns', None)
+#     pd.set_option('display.width', None)
+#     pd.set_option('display.max_colwidth', None)
+#     df = pd.read_csv("connected/code_snippets.csv")
+#     df["description"] = df["description"].str.wrap(100)
+#     print(df)
+
+"""
+   end: block working with files 
+"""
 
 
 # editing user input
@@ -375,7 +532,7 @@ def editing_user_input(user_input):
 
     if slash_index > 0:
         tag = user_input[:slash_index + 1]
-        tag = tag[:-1]
+        tag = f"{tag[:-1]} { 0}"
         read_and_write_tag_json_list(tag, "tags", json_data_list_file)
         user_input = user_input[slash_index + 2:]  # +2 eliminates space before note
     else:
@@ -397,16 +554,16 @@ def editing_user_input(user_input):
             new_string += char
 
     time_now_clock = time.ctime()[11:19]
-    formated_user_input = {time_now_clock + f" tag: {tag}" + " #" + str(order): new_string}
+    formatted_user_input = {time_now_clock + f" tag: {tag}" + " #" + str(order): new_string}
 
-    return formated_user_input
+    return formatted_user_input
 
 
-def update_json_file(time_now, file_name):
+def update_json_file(current_time, file_name):
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
 
-    file_data.update({time_now: []})
+    file_data.update({current_time: []})
 
     with open(file_name, "w") as json_file:
         json.dump(file_data, json_file, ensure_ascii=False, indent=4)
@@ -433,7 +590,7 @@ def time_control(new_task):
     start = time.time()
 
     print("Input any key to stop the timer")
-    stop_timer = input("Input: ")
+    input("Input: ")
     stop = time.time()
     elapsed_time = stop - start  # time in seconds
 
@@ -444,7 +601,7 @@ def time_control(new_task):
     print(f"Time spend on task {new_task} {time_spend}\n")
 
 
-# show available dates open data_tasks_time.json and read all keys with seconds
+# show available dates open data_tasks_time.json and read all keys with seconds.
 def read_time(file_name):
     read_json_date(file_name, "tasks")
     input_task = input("The date: ").capitalize()

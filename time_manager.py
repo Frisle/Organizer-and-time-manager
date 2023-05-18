@@ -5,6 +5,8 @@ import json
 import write_create
 import time
 
+import threading
+
 
 
 data_tasks_time = "data_tasks_time.json"
@@ -34,10 +36,14 @@ def read_json_tasks(file_name, task_time):
             print(f"{count-1} {list(tasks.keys())}")
         return list_tasks
 
+def interface():
+    os.popen("interface.py")
+
 
 def main():
 
     idle_time_start = time.time()  # start idle time measure
+    write_create.update_task_json("idle_parameter", "idle", json_data_list_file)
 
     current_task = read_json("current_task", json_data_list_file)
     print(f"Current task: {current_task}")
@@ -45,6 +51,7 @@ def main():
     user_input = input("What to do: ").capitalize()
     idle_time_stop = time.time()  # stop idle time measure
     idle_result = idle_time_stop - idle_time_start
+    write_create.update_task_json("idle_parameter", "work", json_data_list_file)
     time_spend = timedelta(seconds=idle_result)
     """
     Idle time write block
@@ -112,4 +119,15 @@ def main():
 
 # test_cases  --file-version=0.0.4.16 --product-name=Time_manager --enable-console --mingw64 --standalone --onefile --windows-icon-from-ico=coding.ico --output-dir="C:\Users\wda61\PycharmProjects\Builds\Organizer" --remove-output
 # --file-version=0.0.4.16 --product-name=Time_manager --enable-console --mingw64 --standalone --onefile --windows-icon-from-ico=coding.ico --output-dir="C:\Distributed_apps" --remove-output
-main()
+
+
+
+def interfaceThreadFunction():
+    thread1 = threading.Thread(target=interface)
+    thread1.start()
+interfaceThreadFunction()
+
+def mainThreadFunction():
+    thread2 = threading.Thread(target=main)
+    thread2.start()
+mainThreadFunction()
