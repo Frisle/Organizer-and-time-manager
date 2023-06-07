@@ -7,7 +7,8 @@ from datetime import timedelta
 from datetime import datetime
 import os
 from shutil import copyfile
-import test_case
+from columnar import columnar
+import ast
 
 json_data_file = os.path.join(os.getcwd(), r"notes_json.json")
 json_data_list_file = os.path.join(os.getcwd(), r"data.json")
@@ -127,24 +128,67 @@ def create_null_json():
 """
 
 
+"""
+delete function. 
+in order to delete multiple notes from dictionary
+it has to be separated from remove_notes()
+"""
+
+
+def delete(list_data, num):
+    for i in num:
+        list_data.pop(i)
+    return list_data
+
+
+# deletes notes from dictionary
+def remove_notes(user_input):
+    position = user_input[:10]
+    index = user_input[11:].split()
+
+    with open(json_data_file, "r") as json_file:
+        file_data = json.load(json_file)
+        index_list = []
+        for order in file_data[position]:
+
+            note_num = order[0].strip("#")
+
+            for num in index:
+                if int(num) == int(note_num):
+
+                    index_list.append(file_data[position].index(order))
+
+                    index_list.sort(reverse=True)
+                    print("Note " + str(note_num) + " deleted")
+        val = delete(file_data[position], index_list)
+        file_data[position] = val
+
+    with open(json_data_file, "w") as json_file:
+        json.dump(file_data, json_file, ensure_ascii=False, indent=4)
+
+
 # read position of the file to display keys(-date)
 def read_json_date(file_name, elem):
     with open(file_name, "r") as json_file:
+
         file_data = json.load(json_file)
         for day in file_data:
-            full_day = datetime.strptime(day, '%m/%d/%Y')
-            day_slash = full_day.strftime('%m/%d/%Y')
-            day_name = full_day.strftime('%a %d')
-            month_name = full_day.strftime('%b')
-            year = full_day.strftime('\'%y')
-            print(f"{day_name} {month_name} {year} {len(file_data[day])} {elem} {day_slash}")
+            if len(file_data[day]) > 0:
+                full_day = datetime.strptime(day, '%m/%d/%Y')
+                day_slash = full_day.strftime('%m/%d/%Y')
+                day_name = full_day.strftime('%a %d')
+                month_name = full_day.strftime('%b')
+                year = full_day.strftime('\'%y')
+                print(f"{day_name} {month_name} {year} {len(file_data[day])} {elem} {day_slash}")
 
 
 def read_json_display_tags(position, file_name):
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
-        data_pull = file_data[position]
-        return data_pull
+        table = columnar(file_data[position], headers=['Tag', 'Number of notes'],
+                         no_borders=True,
+                         max_column_width=None, wrap_max=1, terminal_width=None)
+        print(table)
 
 
 # read and display today keys
@@ -167,7 +211,8 @@ def read_json_date_func(position, file_name):
         try:
             data_pull = file_data[position]
             for data in data_pull:
-                print(data)
+                table = pretty_print(file_data[position], "notes")
+            print(table)
             return data
         except KeyError:
             print("There is no notes that day or date is incorrect")
@@ -199,9 +244,9 @@ def read_json_tasks_time(file_name, position):
 #         json.dump(file_data, json_file)
 
 
-# append a new artefact to the position key in data_list.json
-# contain test option remove, for future use
-def append_json(position, data, file_name, remove = False):
+# Append a new artefact to the position key in data_list.json.
+# Contain test option remove, for future use.
+def append_json(position, data, file_name, remove=False):
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
     if not remove:
@@ -241,56 +286,58 @@ def read_and_write_tag_json_list(new_tag, position, file_name):
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
         data_pull = file_data[position]  # <class 'list'>
-
+        for item in data_pull:
+            if item[0] == new_tag[0]:
+                append_json("tags", item, json_data_list_file, remove=True)
+                new_tag = [new_tag[0], new_tag[1]]
         if data_pull.count(new_tag) <= 0:
             append_json("tags", new_tag, json_data_list_file)
         else:
             pass
 
 
-# find the note and replace it with edited one (-test)
+# find the note and replace it with edited one -edit
 def update_json(replace_data, file_name, user_input):
     position = user_input[:10]
     index = int(user_input[11:13])
 
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
+        for order in file_data[position]:
+            new_index = order[0].strip("#")
 
-    file_data[position].pop(index)
+            if index == int(new_index):
+                index_del = file_data[position].index(order)
+                file_data[position].remove(order)
 
     with open(file_name, "w") as json_file:
         json.dump(file_data, json_file, ensure_ascii=False, indent=4)
 
-    colon = replace_data.rfind(":")
+    new_note = ""
+    for item in replace_data:
+        if item == "'":
+            item = '"'
+        new_note += item
 
-    key = replace_data[:colon].strip("{")
-    processed_key = ""
-    for item in key:
-        if item != "'":
-            processed_key += item
+    new_note_processed = ast.literal_eval(new_note)  # transform string from input to list
 
-    value = replace_data[colon+1:].strip("}")
-    processed_value = ""
-    for item in value:
-        if item != "'":
-            processed_value += item
-
-    note = {processed_key: processed_value}
-
-    file_data[position].insert(index, note)
+    file_data[position].insert(index_del, new_note_processed)
 
     with open(file_name, "w") as json_file:
         json.dump(file_data, json_file, ensure_ascii=False, indent=4)
 
 
-def pretty_print(data_pull):
-    for note in data_pull:
-        for if_note_list in note.values():
-            if type(if_note_list) == list:
-                pretty_item = json.dumps(note, ensure_ascii=False, indent=1)  # test function
-                print(pretty_item)
-            else:
-                print(note)
+def pretty_print(line, doc_type):
+    if doc_type == "artifacts":
+        table = columnar(line, headers=['Order', 'Extension', 'File name', 'Size', 'Type', 'Description'],
+                         no_borders=True,
+                         max_column_width=None, wrap_max=5, terminal_width=None)
+        return table
+    elif doc_type == "notes":
+        table = columnar(line, headers=['Order', 'Date', 'Creation Time', 'Tag', 'Note'],
+                         justify=["c", "c", "c", "c", "l"], no_borders=True,
+                         max_column_width=None, wrap_max=5, terminal_width=None)
+        return table
 
 
 # read today
@@ -300,13 +347,9 @@ def read_json_by_time_for_disp_time(file_name):
         data_pull = file_data[time_now]
         for keys in file_data:
             if keys == time_now and len(data_pull) != 0:
-                for note in data_pull:
-                    for if_note_list in note.values():
-                        if type(if_note_list) == list:
-                            pretty_item = json.dumps(note, ensure_ascii=False, indent=1)  # test function
-                            print(pretty_item)
-                        else:
-                            print(note)
+
+                print(pretty_print(file_data[time_now], "notes"))
+
             elif keys == time_now and len(data_pull) == 0:
                 print("There is no notes yet")
 
@@ -323,39 +366,32 @@ def read_json_by_time_for_return_order(file_name):
     return order_num
 
 
-# display all
+# display all "-all"
 def read_json_by_time_for_disp_all(file_name):
-    no = "There is no notes"
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
         for notes in file_data:
-            print(notes)
             if len(file_data[notes]) > 0:
-                for item in file_data[notes]:
-                    print(item)
-            else:
-                print(no)
+                table = pretty_print(file_data[notes], "notes")
+                print(table)
 
 
 # read by certain position
-def read_json_by_time_and_request(file_name, number):
+def read_json_by_time_and_request(file_name):
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
         for item in file_data[time_now]:
-            cage_index = str(item.keys()).find("#")
-            if number in str(item.keys())[cage_index:]:
-                print(list(item.keys())[-1])
-                print(f"{list(item.keys())[0:7]} {item[list(item.keys())[-1]]}")
+            print(item)
 
 
-# return index of dict with task in time_now list (time_control)
+# return index of dict with task in “time_now“ list ("time_control")
 def read_json_tasks_index(position, task, file_name):  # <'index'>
     """
 
-    :param position: takes time_now
-    :param task: takes name of the task as a string
+    :param position: takes "time_now"
+    :param task: takes “name” of the task as a string
     :param file_name: current file name of the json
-    :return: numeric index of a task or False if not
+    :return: “numeric index” of a task or False if not.
     """
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
@@ -372,33 +408,39 @@ def read_json_tasks_index(position, task, file_name):  # <'index'>
 # search by key word in values
 def read_json_to_search(file_name, search_entry):
     count = 0
+    new_list = []
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
         for date in file_data:
             for tasks in file_data[date]:
-                for item in tasks.values():
-                    if search_entry.lower() in item.lower():
-                        count += 1
-                        # # notes = pprint.pformat(tasks, indent=1, width=80, depth=2, compact=False, sort_dicts=True,
-                        #                        underscore_numbers=False)
-                        # print(date, tasks)
-                        print(tasks)
+                if search_entry.lower() in tasks[4].lower():
+                    count += 1
+                    index = file_data[date].index(tasks)
+                    new_list.append(file_data[date][index])
+        if new_list:
+            print(pretty_print(new_list, "notes"))
+            print(f"Found {count} match")
+        else:
+            print("There is no notes with key")
 
-        print(f"Found {count} match")
 
-
-# search by key word in keys (by -tag)
+# search by tag field (-tag)
 def read_json_to_search_by_tag(file_name, search_entry):
+    count = 0
+    new_list = []
     with open(file_name, "r") as json_file:
         file_data = json.load(json_file)
         for date in file_data:
-            for tasks in file_data[date]:
-                for item in tasks.keys():
-                    if search_entry.lower() in item.lower():
-                        # notes = pprint.pformat(tasks, indent=1, width=80, depth=2, compact=False, sort_dicts=True,
-                        #                        underscore_numbers=False)
-                        print(date, str(tasks))
-                        # print(notes)
+            for task in file_data[date]:
+                if search_entry.lower() in task[3].lower():
+                    count += 1
+                    index = file_data[date].index(task)
+                    new_list.append(file_data[date][index])
+    if new_list:
+        print(pretty_print(new_list, "notes"))
+        print(f"Found {count} match")
+    else:
+        print("There is no tag with this key")
 
 
 """
@@ -408,17 +450,14 @@ def read_json_to_search_by_tag(file_name, search_entry):
 
 #  function to view available artifacts
 def read_file_list(position, file_name):
+    names_list = []
     with open(file_name, "r") as json_file:
-        key_list = []
         file_data = json.load(json_file)
-        if len(file_data[position]) == 0:
-            return False
         data_pull = file_data[position]
+        print(pretty_print(file_data[position], "artifacts"))
         for item in data_pull:
-            for delim in list(item.keys()):
-                key_list.append(delim.split("%"))
-                print(delim.replace("%", " || "), " || ", *list(item.values()))
-        return key_list
+            names_list.append(item[2]+item[1])
+        return names_list
 
 
 # function form record with artifact data and write in data.json
@@ -429,8 +468,11 @@ def update_artifact_list(position, file_name, name, extension, size, key, descri
         data_pull = file_data[position]
         order = len(data_pull)
 
-        # order+1==next to last number, extension==file extension from os.path.splitext(file_name), size==size in bytes
-        data = {f"{order+1}%{extension}%{name}%{size}kb%{key}": f"{description}"}
+        # order+1==next to last number,
+        # extension==file extension from an os.path.splitext(file_name),
+        # size==size in bytes
+        # data = {f"{order+1}%{extension}%{name}%{size}kb%{key}": f"{description}"}
+        data = [order, extension, name, f"{size} kb", key, description]
 
     file_data[position].append(data)
 
@@ -443,7 +485,7 @@ def importing_new_file(path):
     name, extension = os.path.splitext(file_name)  # separate file name and extension
     size = os.path.getsize(path) / 1024  # get file size in bytes
     description = input("Input short description: ")
-    content_category = input("Input ")
+    content_category = input("Input category")
     size_in_bt = '{0:.2f}'.format(size)
     update_artifact_list("artifacts", json_data_list_file, name, extension, size_in_bt, content_category, description)
     parent_dir = os.getcwd()
@@ -520,6 +562,45 @@ def csv_reader():
 """
 
 
+def formate_output(lines):
+    values = []
+    keys = []
+    line = []
+    for key, value in lines.items():
+        keys.append(key)
+        values.append(value)
+        for item in keys:
+            bar = item.index("#")-1
+            colon = item.rindex(":")+2
+            tag = item[colon:bar]
+            creation_time = item.split()[0]
+            date_time = item.split()[1]
+            order = item.split()[-1]
+            line.append(order)
+            line.append(date_time)
+            line.append(creation_time)
+            line.append(tag)
+            line.append(*values)
+
+    return line
+
+
+def tag_counting(item):
+    with open(json_data_file, "r") as json_file:
+        count = 0
+        file_data = json.load(json_file)
+        data_pull = file_data
+        for data in data_pull:
+            for i in data_pull[data]:
+                for tag in i:
+                    if item in tag:
+                        count += 1
+                        print(count)
+                    else:
+                        pass
+        return count
+
+
 # editing user input
 def editing_user_input(user_input):
     # capitalize every character next to the dot
@@ -531,10 +612,14 @@ def editing_user_input(user_input):
     slash_index = user_input.find("\\")
 
     if slash_index > 0:
-        tag = user_input[:slash_index + 1]
-        tag = f"{tag[:-1]} { 0}"
-        read_and_write_tag_json_list(tag, "tags", json_data_list_file)
+        new_tag = user_input[:slash_index + 1]
+        tag = new_tag[:-1]
+        tag_amount = tag_counting(tag)
+        tag_count = [tag, tag_amount]
+        read_and_write_tag_json_list(tag_count, "tags", json_data_list_file)
         user_input = user_input[slash_index + 2:]  # +2 eliminates space before note
+        # tag = tag[:-1]
+
     else:
         tag = "other"
 
@@ -553,8 +638,10 @@ def editing_user_input(user_input):
         else:
             new_string += char
 
+    date_time = time_kz.strftime("%m/%d/%Y")
     time_now_clock = time.ctime()[11:19]
-    formatted_user_input = {time_now_clock + f" tag: {tag}" + " #" + str(order): new_string}
+    formatted_dict_line = {time_now_clock + " " + date_time + f" tag: {tag}" + " #" + str(order): new_string}
+    formatted_user_input = formate_output(formatted_dict_line)
 
     return formatted_user_input
 

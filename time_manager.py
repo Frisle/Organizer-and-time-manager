@@ -5,7 +5,7 @@ import json
 import write_create
 import time
 
-import threading
+
 
 
 
@@ -35,9 +35,6 @@ def read_json_tasks(file_name, task_time):
             list_tasks.append(list(tasks.keys()))
             print(f"{count-1} {list(tasks.keys())}")
         return list_tasks
-
-def interface():
-    os.popen("interface.py")
 
 
 def main():
@@ -117,17 +114,9 @@ def main():
     main()
 
 
+main()
 # test_cases  --file-version=0.0.4.16 --product-name=Time_manager --enable-console --mingw64 --standalone --onefile --windows-icon-from-ico=coding.ico --output-dir="C:\Users\wda61\PycharmProjects\Builds\Organizer" --remove-output
 # --file-version=0.0.4.16 --product-name=Time_manager --enable-console --mingw64 --standalone --onefile --windows-icon-from-ico=coding.ico --output-dir="C:\Distributed_apps" --remove-output
 
 
 
-def interfaceThreadFunction():
-    thread1 = threading.Thread(target=interface)
-    thread1.start()
-interfaceThreadFunction()
-
-def mainThreadFunction():
-    thread2 = threading.Thread(target=main)
-    thread2.start()
-mainThreadFunction()
