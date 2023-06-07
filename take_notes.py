@@ -194,12 +194,15 @@ def main():
               "Input \"-import\" to copy files to app directory\n"
               "Then input full path to new file.\n\n"
               "Input \"-edit\" to modify desired note(beta)\n"
-              "First you need to now exact date and position of the note\n"
+              "First you need to know exact date and position of the note\n"
               "In this exact manner \"dd/mm/yyyy %note number%\"\n"
               "You will be prompted to input date and index of your note\n"
               "Then after \"Input replace note: \" press ctrl+v and paste note to modify\n"
               "The note must have the same fields as before in order for the system to understand it\n\n"
-              "To quit from any of this prompts type \"quit\"")
+              "Input \"-del\" to invoke delete sequence\n"
+              "The you will be prompted with input date of the note\n"
+              "and index numbers. You can delete more than one note in one go\n\n"
+              "To quit from any of this prompts type \"quit\"\n\n")
         take_notes()
 
     def take_notes():
