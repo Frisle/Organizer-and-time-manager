@@ -1,7 +1,6 @@
 # Work Organizer
 
 The project was created from the frustration of managing a bunch of text files and pdf documents. The goal was to create a centralized place to manage the knowledge base. And since I'm a fan of command interfaces, everything works on commands.
-
 These are two-part console applications: the first for creating and organizing notes and artifacts, the second for keeping track of time spent on work tasks.
 
 What Organizer can do:
