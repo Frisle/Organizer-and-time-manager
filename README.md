@@ -9,7 +9,7 @@ What Organizer can do:
 Input "-new" and write a new note.
 Write your "tag" after it if needed.
 
-Input "-cls" to clear the console.
+Input "-cls" to clean the console.
 
 Input "-sh" to search the notes by key word
 Search notes by key-words in body of a note.
@@ -53,3 +53,12 @@ The you will be prompted with input date of the note
 and index numbers. You can delete more than one note in one go.
 
 To quit from any of this prompts type "quit"
+
+
+What Time Manager can do:
+
+Input "-Begin" This will create and start new task
+Input "-Current" and you will continue last task
+Input "-Return" will take you back to previous task
+Input "-Read time" show how much time is spend on each task
+Input "-cls" to clean the console
