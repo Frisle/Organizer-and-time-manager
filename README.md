@@ -58,7 +58,11 @@ To quit from any of this prompts type "quit"
 What Time Manager can do:
 
 Input "-Begin" This will create and start new task
+
 Input "-Current" and you will continue last task
+
 Input "-Return" will take you back to previous task
+
 Input "-Read time" show how much time is spend on each task
+
 Input "-cls" to clean the console
